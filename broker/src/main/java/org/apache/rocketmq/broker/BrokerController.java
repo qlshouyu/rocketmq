@@ -246,6 +246,8 @@ public class BrokerController {
     protected MessageStore messageStore;
     protected static final String TCP_REMOTING_SERVER = "TCP_REMOTING_SERVER";
     protected static final String FAST_REMOTING_SERVER = "FAST_REMOTING_SERVER";
+    // 服务列表，端口相差2的2个 NettyRemotingServer，TCP_REMOTING_SERVER，FAST_REMOTING_SERVER
+    // FAST_REMOTING_SERVER端口比TCP_REMOTING_SERVER端口小2
     protected final Map<String, RemotingServer> remotingServerMap = new ConcurrentHashMap<>();
     protected CountDownLatch remotingServerStartLatch;
     /**
