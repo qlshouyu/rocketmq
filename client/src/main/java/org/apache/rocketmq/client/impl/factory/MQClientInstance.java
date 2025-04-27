@@ -310,7 +310,7 @@ public class MQClientInstance {
                     if (null == this.clientConfig.getNamesrvAddr()) {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
-                    // Start request-response channel
+                    //RemotingClient 会启动RemotingClient; Start request-response channel
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
                     this.startScheduledTask();
@@ -318,7 +318,7 @@ public class MQClientInstance {
                     this.pullMessageService.start();
                     // Start rebalance service
                     this.rebalanceService.start();
-                    // Start push service
+                    // Start push service，不启动 RemotingClient
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
                     log.info("the client factory [{}] start OK", this.clientId);
                     this.serviceState = ServiceState.RUNNING;
@@ -332,7 +332,9 @@ public class MQClientInstance {
     }
 
     private void startScheduledTask() {
+        // 由于this.clientConfig.getNamesrvAddr() 一般都会配置不会为空，所以此代码不会执行
         if (null == this.clientConfig.getNamesrvAddr()) {
+            // 延迟10秒，每2分钟固定频率执行
             this.scheduledExecutorService.scheduleAtFixedRate(() -> {
                 try {
                     MQClientInstance.this.mQClientAPIImpl.fetchNameServerAddr();

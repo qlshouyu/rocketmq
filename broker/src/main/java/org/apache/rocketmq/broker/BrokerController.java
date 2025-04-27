@@ -1649,10 +1649,12 @@ public class BrokerController {
 
     protected void startBasicService() throws Exception {
 
+        // 启动消息存储服务，默认是DefaultMessageStore
         if (this.messageStore != null) {
             this.messageStore.start();
         }
 
+        // 启动定时消息存储服务
         if (this.timerMessageStore != null) {
             this.timerMessageStore.start();
         }

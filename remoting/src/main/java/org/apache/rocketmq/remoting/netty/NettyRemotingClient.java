@@ -196,6 +196,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                 nettyClientConfig.getClientWorkerThreads(),
                 new ThreadFactoryImpl("NettyClientWorkerThread_"));
         }
+
         Bootstrap handler = this.bootstrap.group(this.eventLoopGroupWorker).channel(NioSocketChannel.class)
             .option(ChannelOption.TCP_NODELAY, true)
             .option(ChannelOption.SO_KEEPALIVE, false)
@@ -238,6 +239,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
         if (nettyClientConfig.isClientPooledByteBufAllocatorEnable()) {
             handler.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
+
 
         nettyEventExecutor.start();
 
@@ -532,6 +534,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                 this.namesrvAddrList.set(addrs);
 
                 // should close the channel if choosed addr is not exist.
+                // 如果之前的地址不在新的地址列表中，则关闭该地址对应的channel
                 String chosenNameServerAddr = this.namesrvAddrChoosed.get();
                 if (chosenNameServerAddr != null && !addrs.contains(chosenNameServerAddr)) {
                     namesrvAddrChoosed.compareAndSet(chosenNameServerAddr, null);

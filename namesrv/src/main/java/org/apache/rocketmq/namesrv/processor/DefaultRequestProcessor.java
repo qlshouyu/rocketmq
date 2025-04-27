@@ -128,6 +128,7 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
                 return this.getAllTopicListFromNameserver(ctx, request);
             case RequestCode.DELETE_TOPIC_IN_NAMESRV:
                 return this.deleteTopicInNamesrv(ctx, request);
+                // 注册topic
             case RequestCode.REGISTER_TOPIC_IN_NAMESRV:
                 return this.registerTopicToNamesrv(ctx, request);
             case RequestCode.GET_KVLIST_BY_NAMESPACE:
