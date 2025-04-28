@@ -200,6 +200,8 @@
         <module>controller</module>
         <module>proxy</module>
         <module>tieredstore</module>
+
+        <module>phantom-im</module>
     </modules>
 
     <build>

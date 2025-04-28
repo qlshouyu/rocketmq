@@ -173,8 +173,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     private ScheduledExecutorService buildScheduleExecutor() {
         return ThreadUtils.newScheduledThreadPool(1,
-            new ThreadFactoryImpl("NettyServerScheduler_", true),
-            new ThreadPoolExecutor.DiscardOldestPolicy());
+                new ThreadFactoryImpl("NettyServerScheduler_", true),
+                new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     public void loadSslContext() {
@@ -191,27 +191,27 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         }
     }
 
-    private boolean useEpoll() {
+    protected boolean useEpoll() {
         return NetworkUtil.isLinuxPlatform()
-            && nettyServerConfig.isUseEpollNativeSelector()
-            && Epoll.isAvailable();
+                && nettyServerConfig.isUseEpollNativeSelector()
+                && Epoll.isAvailable();
     }
 
     protected void initServerBootstrap(ServerBootstrap serverBootstrap) {
         serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
-            .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
-            .option(ChannelOption.SO_BACKLOG, 1024)
-            .option(ChannelOption.SO_REUSEADDR, true)
-            .childOption(ChannelOption.SO_KEEPALIVE, false)
-            .childOption(ChannelOption.TCP_NODELAY, true)
-            .localAddress(new InetSocketAddress(this.nettyServerConfig.getBindAddress(),
-                this.nettyServerConfig.getListenPort()))
-            .childHandler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                public void initChannel(SocketChannel ch) {
-                    configChannel(ch);
-                }
-            });
+                .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.SO_KEEPALIVE, false)
+                .childOption(ChannelOption.TCP_NODELAY, true)
+                .localAddress(new InetSocketAddress(this.nettyServerConfig.getBindAddress(),
+                        this.nettyServerConfig.getListenPort()))
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) {
+                        configChannel(ch);
+                    }
+                });
 
         addCustomConfig(serverBootstrap);
     }
@@ -219,7 +219,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     @Override
     public void start() {
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(nettyServerConfig.getServerWorkerThreads(),
-            new ThreadFactoryImpl("NettyServerCodecThread_"));
+                new ThreadFactoryImpl("NettyServerCodecThread_"));
 
         initServerBootstrap(serverBootstrap);
 
@@ -231,11 +231,11 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 this.nettyServerConfig.setListenPort(addr.getPort());
             }
             log.info("RemotingServer started, listening {}:{}", this.nettyServerConfig.getBindAddress(),
-                this.nettyServerConfig.getListenPort());
+                    this.nettyServerConfig.getListenPort());
             this.remotingServerTable.put(this.nettyServerConfig.getListenPort(), this);
         } catch (Exception e) {
             throw new IllegalStateException(String.format("Failed to bind to %s:%d", nettyServerConfig.getBindAddress(),
-                nettyServerConfig.getListenPort()), e);
+                    nettyServerConfig.getListenPort()), e);
         }
 
         if (this.channelEventListener != null) {
@@ -273,20 +273,20 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
      */
     protected ChannelPipeline configChannel(SocketChannel ch) {
         return ch.pipeline()
-            .addLast(nettyServerConfig.isServerNettyWorkerGroupEnable() ? defaultEventExecutorGroup : null,
-                HANDSHAKE_HANDLER_NAME, new HandshakeHandler())
-            .addLast(nettyServerConfig.isServerNettyWorkerGroupEnable() ? defaultEventExecutorGroup : null,
-                encoder,
-                new NettyDecoder(),
-                distributionHandler,
-                new IdleStateHandler(0, 0,
-                    nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
-                connectionManageHandler,
-                serverHandler
-            );
+                .addLast(nettyServerConfig.isServerNettyWorkerGroupEnable() ? defaultEventExecutorGroup : null,
+                        HANDSHAKE_HANDLER_NAME, new HandshakeHandler())
+                .addLast(nettyServerConfig.isServerNettyWorkerGroupEnable() ? defaultEventExecutorGroup : null,
+                        encoder,
+                        new NettyDecoder(),
+                        distributionHandler,
+                        new IdleStateHandler(0, 0,
+                                nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
+                        connectionManageHandler,
+                        serverHandler
+                );
     }
 
-    private void addCustomConfig(ServerBootstrap childHandler) {
+    protected void addCustomConfig(ServerBootstrap childHandler) {
         if (nettyServerConfig.getServerSocketSndBufSize() > 0) {
             log.info("server set SO_SNDBUF to {}", nettyServerConfig.getServerSocketSndBufSize());
             childHandler.childOption(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize());
@@ -297,9 +297,9 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         }
         if (nettyServerConfig.getWriteBufferLowWaterMark() > 0 && nettyServerConfig.getWriteBufferHighWaterMark() > 0) {
             log.info("server set netty WRITE_BUFFER_WATER_MARK to {},{}",
-                nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark());
+                    nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark());
             childHandler.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(
-                nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark()));
+                    nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark()));
         }
 
         if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
@@ -372,8 +372,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     @Override
     public RemotingServer newRemotingServer(final int port) {
         SubRemotingServer remotingServer = new SubRemotingServer(port,
-            this.nettyServerConfig.getServerOnewaySemaphoreValue(),
-            this.nettyServerConfig.getServerAsyncSemaphoreValue());
+                this.nettyServerConfig.getServerOnewaySemaphoreValue(),
+                this.nettyServerConfig.getServerAsyncSemaphoreValue());
         NettyRemotingAbstract existingServer = this.remotingServerTable.putIfAbsent(port, remotingServer);
         if (existingServer != null) {
             throw new RuntimeException("The port " + port + " already in use by another RemotingServer");
@@ -388,19 +388,19 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     @Override
     public RemotingCommand invokeSync(final Channel channel, final RemotingCommand request, final long timeoutMillis)
-        throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException {
+            throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException {
         return this.invokeSyncImpl(channel, request, timeoutMillis);
     }
 
     @Override
     public void invokeAsync(Channel channel, RemotingCommand request, long timeoutMillis, InvokeCallback invokeCallback)
-        throws InterruptedException, RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
+            throws InterruptedException, RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
         this.invokeAsyncImpl(channel, request, timeoutMillis, invokeCallback);
     }
 
     @Override
     public void invokeOneway(Channel channel, RemotingCommand request, long timeoutMillis) throws InterruptedException,
-        RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
+            RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
         this.invokeOnewayImpl(channel, request, timeoutMillis);
     }
 
@@ -419,13 +419,13 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             String inBoundSnapshotString = distributionHandler.getInBoundSnapshotString();
             if (inBoundSnapshotString != null) {
                 TRAFFIC_LOGGER.info("Port: {}, RequestCode Distribution: {}",
-                    nettyServerConfig.getListenPort(), inBoundSnapshotString);
+                        nettyServerConfig.getListenPort(), inBoundSnapshotString);
             }
 
             String outBoundSnapshotString = distributionHandler.getOutBoundSnapshotString();
             if (outBoundSnapshotString != null) {
                 TRAFFIC_LOGGER.info("Port: {}, ResponseCode Distribution: {}",
-                    nettyServerConfig.getListenPort(), outBoundSnapshotString);
+                        nettyServerConfig.getListenPort(), outBoundSnapshotString);
             }
         }
     }
@@ -464,8 +464,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 }
                 if (detectionResult.state() == ProtocolDetectionState.DETECTED) {
                     ctx.pipeline().addAfter(defaultEventExecutorGroup, ctx.name(), HA_PROXY_DECODER, new HAProxyMessageDecoder())
-                        .addAfter(defaultEventExecutorGroup, HA_PROXY_DECODER, HA_PROXY_HANDLER, new HAProxyMessageHandler())
-                        .addAfter(defaultEventExecutorGroup, HA_PROXY_HANDLER, TLS_MODE_HANDLER, tlsModeHandler);
+                            .addAfter(defaultEventExecutorGroup, HA_PROXY_DECODER, HA_PROXY_HANDLER, new HAProxyMessageHandler())
+                            .addAfter(defaultEventExecutorGroup, HA_PROXY_HANDLER, TLS_MODE_HANDLER, tlsModeHandler);
                 } else {
                     ctx.pipeline().addAfter(defaultEventExecutorGroup, ctx.name(), TLS_MODE_HANDLER, tlsModeHandler);
                 }
@@ -510,8 +510,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     case ENFORCING:
                         if (null != sslContext) {
                             ctx.pipeline()
-                                .addAfter(defaultEventExecutorGroup, TLS_MODE_HANDLER, TLS_HANDLER_NAME, sslContext.newHandler(ctx.channel().alloc()))
-                                .addAfter(defaultEventExecutorGroup, TLS_HANDLER_NAME, FILE_REGION_ENCODER_NAME, new FileRegionEncoder());
+                                    .addAfter(defaultEventExecutorGroup, TLS_MODE_HANDLER, TLS_HANDLER_NAME, sslContext.newHandler(ctx.channel().alloc()))
+                                    .addAfter(defaultEventExecutorGroup, TLS_HANDLER_NAME, FILE_REGION_ENCODER_NAME, new FileRegionEncoder());
                             log.info("Handlers prepended to channel pipeline to establish SSL connection");
                         } else {
                             ctx.close();
@@ -562,12 +562,12 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 if (!channel.config().isAutoRead()) {
                     channel.config().setAutoRead(true);
                     log.info("Channel[{}] turns writable, bytes to buffer before changing channel to un-writable: {}",
-                        RemotingHelper.parseChannelRemoteAddr(channel), channel.bytesBeforeUnwritable());
+                            RemotingHelper.parseChannelRemoteAddr(channel), channel.bytesBeforeUnwritable());
                 }
             } else {
                 channel.config().setAutoRead(false);
                 log.warn("Channel[{}] auto-read is disabled, bytes to drain before it turns writable: {}",
-                    RemotingHelper.parseChannelRemoteAddr(channel), channel.bytesBeforeWritable());
+                        RemotingHelper.parseChannelRemoteAddr(channel), channel.bytesBeforeWritable());
             }
             super.channelWritabilityChanged(ctx);
         }
@@ -621,7 +621,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     RemotingHelper.closeChannel(ctx.channel());
                     if (NettyRemotingServer.this.channelEventListener != null) {
                         NettyRemotingServer.this
-                            .putNettyEvent(new NettyEvent(NettyEventType.IDLE, remoteAddress, ctx.channel()));
+                                .putNettyEvent(new NettyEvent(NettyEventType.IDLE, remoteAddress, ctx.channel()));
                     }
                 }
             }
@@ -692,13 +692,13 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         @Override
         public RemotingServer newRemotingServer(final int port) {
             throw new UnsupportedOperationException("The SubRemotingServer of NettyRemotingServer " +
-                "doesn't support new nested RemotingServer");
+                    "doesn't support new nested RemotingServer");
         }
 
         @Override
         public void removeRemotingServer(final int port) {
             throw new UnsupportedOperationException("The SubRemotingServer of NettyRemotingServer " +
-                "doesn't support remove nested RemotingServer");
+                    "doesn't support remove nested RemotingServer");
         }
 
         @Override
@@ -772,6 +772,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         /**
          * The definition of key refers to the implementation of nginx
          * <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#var_proxy_protocol_addr">ngx_http_core_module</a>
+         *
          * @param msg
          * @param channel
          */
@@ -806,7 +807,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             return;
         }
         AttributeKey<String> key = AttributeKeys.valueOf(
-            HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
+                HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
         RemotingHelper.setPropertyToAttr(channel, key, new String(valueBytes, CharsetUtil.UTF_8));
     }
 }
